@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from .models import HandoffDecision, Ticket
 
-
 CONTRACTS = {
     "northstar-health": {
         "allowed_priorities": {"P1", "P2"},
@@ -59,9 +58,13 @@ def evaluate_ticket(ticket: Ticket) -> HandoffDecision:
         required_steps.extend(("recover an actual-user contact", "draft a customer update"))
         review_reasons.append("actual-user contact is missing")
 
-    fulfillment, part_delivery, fulfillment_steps, closure_requirements = _plan_fulfillment(ticket, contract)
+    fulfillment, part_delivery, fulfillment_steps, closure_requirements = _plan_fulfillment(
+        ticket, contract
+    )
     required_steps.extend(fulfillment_steps)
-    draft_handoff = _draft_handoff(ticket, owner, normalized_priority, required_steps, review_reasons)
+    draft_handoff = _draft_handoff(
+        ticket, owner, normalized_priority, required_steps, review_reasons
+    )
 
     return HandoffDecision(
         ticket_id=ticket.ticket_id,
@@ -108,7 +111,10 @@ def _route_ticket(category: str) -> tuple[str, bool, str]:
 
 def _base_steps(ticket: Ticket, owner: str) -> list[str]:
     if owner != "field_service_dispatch":
-        return ["preserve the original ticket cross-reference", "confirm the platform owner accepts the case"]
+        return [
+            "preserve the original ticket cross-reference",
+            "confirm the platform owner accepts the case",
+        ]
     steps = ["confirm device and service history", "confirm site access and scheduling window"]
     if ticket.replacement_needed:
         steps.append("validate replacement compatibility before scheduling")
@@ -127,7 +133,9 @@ def _plan_fulfillment(
         )
 
     if contract["hot_swap"]:
-        delivery = "local_courier_candidate" if ticket.part_available_locally else "overnight_part_order"
+        delivery = (
+            "local_courier_candidate" if ticket.part_available_locally else "overnight_part_order"
+        )
         return (
             "local_hot_swap",
             delivery,
@@ -156,7 +164,9 @@ def _draft_handoff(
     required_steps: list[str],
     review_reasons: list[str],
 ) -> str:
-    review_text = "; ".join(review_reasons) if review_reasons else "human approval required before action"
+    review_text = (
+        "; ".join(review_reasons) if review_reasons else "human approval required before action"
+    )
     step_text = "; ".join(required_steps)
     return (
         f"Draft handoff for {ticket.ticket_id}: assign to {owner} at {priority}; "

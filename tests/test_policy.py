@@ -38,7 +38,9 @@ class FieldBridgePolicyTests(unittest.TestCase):
         self.assertIn("printing is restored", result.closure_requirements)
         self.assertTrue(result.requires_human_approval)
 
-    def test_federal_contract_replacement_requires_reconfiguration_and_cannot_close_as_hot_swap(self) -> None:
+    def test_federal_contract_replacement_requires_reconfiguration_and_cannot_close_as_hot_swap(
+        self,
+    ) -> None:
         result = evaluate_ticket(
             Ticket(
                 ticket_id="FB-101",
