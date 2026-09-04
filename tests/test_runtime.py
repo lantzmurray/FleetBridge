@@ -5,8 +5,10 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
 import runpy
 import unittest
+from unittest.mock import patch
 
 from fieldbridge.demo import main, run_demo
 from fieldbridge.strands_layer import build_agent
@@ -57,6 +59,11 @@ class FieldBridgeRuntimeTests(unittest.TestCase):
         self.assertEqual(handoff["execution_state"], "draft_only")
 
     def test_strands_agent_builds_with_bounded_tool_set_without_a_model_call(self) -> None:
-        agent = build_agent()
+        with patch.dict(
+            os.environ,
+            {"BEDROCK_MODEL_ID": "us.amazon.nova-lite-v1:0", "AWS_REGION": "us-east-1"},
+            clear=True,
+        ):
+            agent = build_agent()
 
         self.assertEqual(agent.__class__.__name__, "Agent")
