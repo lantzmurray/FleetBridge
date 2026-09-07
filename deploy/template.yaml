@@ -1,0 +1,337 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  FieldBridge public demo facade, review ledger, WAF controls, and optional
+  Bedrock AgentCore Runtime. No operational dispatch integrations are created.
+
+Parameters:
+  DeployAgentCore:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Create the AgentCore Runtime after a tested ARM64 image exists in ECR.
+  AgentImageUri:
+    Type: String
+    Default: "000000000000.dkr.ecr.us-east-1.amazonaws.com/fieldbridge-agent:UNKNOWN"
+    Description: Immutable ECR image URI with tag or digest; ignored when DeployAgentCore=false.
+  AgentImageRepositoryName:
+    Type: String
+    Default: fieldbridge-agent
+    AllowedPattern: "^[a-z0-9]+(?:[._/-][a-z0-9]+)*$"
+  BedrockModelId:
+    Type: String
+    Default: us.amazon.nova-lite-v1:0
+    AllowedValues: [us.amazon.nova-lite-v1:0]
+  DeploymentRevision:
+    Type: String
+    Default: UNKNOWN
+    AllowedPattern: "^[A-Za-z0-9._-]{1,64}$"
+
+Conditions:
+  CreateAgentCore: !Equals [!Ref DeployAgentCore, "true"]
+
+Globals:
+  Function:
+    Timeout: 29
+    MemorySize: 512
+    Architectures: [arm64]
+    Tracing: Active
+    Environment:
+      Variables:
+        AWS_REGION_NAME: !Ref AWS::Region
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        DEPLOYMENT_REVISION: !Ref DeploymentRevision
+        DEMO_MODE: synthetic_only
+        RUN_LEDGER_TABLE: !Ref RunLedger
+        SOURCE_HMAC_SECRET_ARN: !Ref SourceHmacSecret
+        DEMO_CLIENT_DAILY_LIMIT: "20"
+        DEMO_GLOBAL_DAILY_LIMIT: "500"
+        AGENTCORE_RUNTIME_ARN: !If
+          - CreateAgentCore
+          - !GetAtt FieldBridgeAgentRuntime.AgentRuntimeArn
+          - UNKNOWN
+
+Resources:
+  FieldBridgeApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: fieldbridge-demo
+      StageName: Prod
+      EndpointConfiguration:
+        Type: REGIONAL
+      TracingEnabled: true
+      OpenApiVersion: 3.0.1
+      MethodSettings:
+        - HttpMethod: "*"
+          ResourcePath: "/*"
+          MetricsEnabled: true
+          DataTraceEnabled: false
+          LoggingLevel: ERROR
+          ThrottlingBurstLimit: 5
+          ThrottlingRateLimit: 10
+
+  FacadeFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      DockerContext: ..
+      Dockerfile: Dockerfile
+      DockerTag: python3.12-arm64
+    Properties:
+      PackageType: Image
+      ReservedConcurrentExecutions: 2
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FieldBridgeApi
+            Path: /
+            Method: ANY
+        Proxy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FieldBridgeApi
+            Path: /{proxy+}
+            Method: ANY
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Sid: RunLedgerAccess
+              Effect: Allow
+              Action:
+                - dynamodb:ConditionCheckItem
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Query
+                - dynamodb:TransactWriteItems
+                - dynamodb:UpdateItem
+              Resource: !GetAtt RunLedger.Arn
+            - Sid: SourceHmacSecretRead
+              Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref SourceHmacSecret
+            - Sid: InvokeFieldBridgeRuntimeOnly
+              Effect: Allow
+              Action: bedrock-agentcore:InvokeAgentRuntime
+              Resource: !Sub >-
+                arn:${AWS::Partition}:bedrock-agentcore:${AWS::Region}:${AWS::AccountId}:runtime/FieldBridgeAgent-*
+
+  FacadeLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${FacadeFunction}
+      RetentionInDays: 14
+
+  RunLedger:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+      Tags:
+        - Key: DataClassification
+          Value: synthetic-only
+
+  SourceHmacSecret:
+    Type: AWS::SecretsManager::Secret
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      Description: HMAC key for one-way public-demo source quota identifiers.
+      GenerateSecretString:
+        ExcludePunctuation: true
+        PasswordLength: 48
+
+  AgentCoreExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: CreateAgentCore
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock-agentcore.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub >-
+                  arn:${AWS::Partition}:bedrock-agentcore:${AWS::Region}:${AWS::AccountId}:*
+      Policies:
+        - PolicyName: fieldbridge-agent-runtime
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PullFieldBridgeImage
+                Effect: Allow
+                Action:
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                Resource: !Sub >-
+                  arn:${AWS::Partition}:ecr:${AWS::Region}:${AWS::AccountId}:repository/${AgentImageRepositoryName}
+              - Sid: GetEcrAuthorizationToken
+                Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: "*"
+              - Sid: InvokeSelectedNovaModel
+                Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - !Sub >-
+                    arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}
+                  - !Sub >-
+                    arn:${AWS::Partition}:bedrock:*::foundation-model/amazon.nova-lite-v1:0
+              - Sid: AgentRuntimeLogGroups
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:DescribeLogStreams
+                  - logs:PutResourcePolicy
+                Resource: !Sub >-
+                  arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/bedrock-agentcore/runtimes/FieldBridgeAgent-*
+              - Sid: AgentRuntimeLogStreams
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub >-
+                  arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/bedrock-agentcore/runtimes/FieldBridgeAgent-*:log-stream:*
+              - Sid: DescribeLogGroups
+                Effect: Allow
+                Action: logs:DescribeLogGroups
+                Resource: "*"
+              - Sid: EmitXrayTelemetry
+                Effect: Allow
+                Action:
+                  - xray:GetSamplingRules
+                  - xray:GetSamplingTargets
+                  - xray:PutTelemetryRecords
+                  - xray:PutTraceSegments
+                Resource: "*"
+              - Sid: EmitAgentCoreMetrics
+                Effect: Allow
+                Action: cloudwatch:PutMetricData
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    cloudwatch:namespace: bedrock-agentcore
+
+  FieldBridgeAgentRuntime:
+    Type: AWS::BedrockAgentCore::Runtime
+    Condition: CreateAgentCore
+    Properties:
+      AgentRuntimeName: FieldBridgeAgent
+      Description: Synthetic-only FieldBridge Strands investigation worker.
+      AgentRuntimeArtifact:
+        ContainerConfiguration:
+          ContainerUri: !Ref AgentImageUri
+      EnvironmentVariables:
+        AWS_REGION_NAME: !Ref AWS::Region
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        DEPLOYMENT_REVISION: !Ref DeploymentRevision
+        DEMO_MODE: synthetic_only
+      LifecycleConfiguration:
+        IdleRuntimeSessionTimeout: 300
+        MaxLifetime: 1800
+      NetworkConfiguration:
+        NetworkMode: PUBLIC
+      ProtocolConfiguration: HTTP
+      RoleArn: !GetAtt AgentCoreExecutionRole.Arn
+
+  DemoWebAcl:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: fieldbridge-demo
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: fieldbridge-demo
+        SampledRequestsEnabled: true
+      Rules:
+        - Name: AWSManagedCommonRules
+          Priority: 0
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: fieldbridge-common-rules
+            SampledRequestsEnabled: true
+        - Name: LimitRunAndReviewPosts
+          Priority: 1
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              AggregateKeyType: IP
+              EvaluationWindowSec: 300
+              Limit: 20
+              ScopeDownStatement:
+                AndStatement:
+                  Statements:
+                    - ByteMatchStatement:
+                        FieldToMatch:
+                          Method: {}
+                        PositionalConstraint: EXACTLY
+                        SearchString: POST
+                        TextTransformations:
+                          - Priority: 0
+                            Type: NONE
+                    - ByteMatchStatement:
+                        FieldToMatch:
+                          UriPath: {}
+                        PositionalConstraint: STARTS_WITH
+                        SearchString: /api/v1/runs
+                        TextTransformations:
+                          - Priority: 0
+                            Type: NONE
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: fieldbridge-run-rate-limit
+            SampledRequestsEnabled: true
+
+  DemoWebAclAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    DependsOn: FieldBridgeApiProdStage
+    Properties:
+      ResourceArn: !Sub >-
+        arn:${AWS::Partition}:apigateway:${AWS::Region}::/restapis/${FieldBridgeApi}/stages/Prod
+      WebACLArn: !GetAtt DemoWebAcl.Arn
+
+Outputs:
+  PublicApiUrl:
+    Description: Candidate public URL. Verify it before replacing UNKNOWN in submission docs.
+    Value: !Sub https://${FieldBridgeApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/
+  RunLedgerTableName:
+    Value: !Ref RunLedger
+  AgentCoreRuntimeArn:
+    Description: UNKNOWN when the optional runtime was not deployed.
+    Value: !If
+      - CreateAgentCore
+      - !GetAtt FieldBridgeAgentRuntime.AgentRuntimeArn
+      - UNKNOWN

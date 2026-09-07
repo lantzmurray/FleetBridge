@@ -21,13 +21,21 @@ from fieldbridge.tools import (
 
 
 class FieldBridgeRuntimeTests(unittest.TestCase):
-    def test_demo_produces_a_repeatable_draft_only_handoff(self) -> None:
-        self.assertEqual(run_demo()["execution_state"], "draft_only")
+    def test_demo_uses_the_agent_investigation_path_and_labels_local_fallback(self) -> None:
+        result = run_demo()
+
+        self.assertEqual(result["mode"], "degraded")
+        self.assertEqual(
+            result["decision_card"]["execution_state"], "DEGRADED_REVIEW_REQUIRED"
+        )
+        self.assertEqual(result["tool_trace"], [])
 
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             main()
-        self.assertEqual(json.loads(output.getvalue())["ticket_id"], "FB-DEMO-001")
+        self.assertEqual(
+            json.loads(output.getvalue())["decision_card"]["ticket_id"], "FB-DEMO-001"
+        )
 
     def test_module_entrypoint_prints_the_demo(self) -> None:
         output = io.StringIO()

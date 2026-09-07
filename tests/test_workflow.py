@@ -38,7 +38,7 @@ class WorkflowServiceTests(unittest.TestCase):
         self.service = WorkflowService(repository=self.repository, clock=self.clock)
 
     def test_create_run_is_immutable_audited_and_has_24_hour_ttl(self) -> None:
-        run = self.service.create_run("replacement-pressure", "idem-001")
+        run = self.service.create_run("replacement-gap", "idem-001")
 
         self.assertEqual(run.state, WorkflowState.CREATED)
         self.assertEqual(run.expires_at, self.clock.current + timedelta(hours=24))
@@ -55,20 +55,20 @@ class WorkflowServiceTests(unittest.TestCase):
         self.assertEqual(events[0].ttl_epoch_seconds, run.ttl_epoch_seconds)
 
     def test_same_idempotency_key_returns_original_run_without_duplicate_event(self) -> None:
-        original = self.service.create_run("replacement-pressure", "idem-002")
-        replay = self.service.create_run("replacement-pressure", "idem-002")
+        original = self.service.create_run("replacement-gap", "idem-002")
+        replay = self.service.create_run("replacement-gap", "idem-002")
 
         self.assertEqual(replay, original)
         self.assertEqual(len(self.service.get_events(original.run_id)), 1)
 
     def test_idempotency_key_cannot_be_reused_for_a_different_scenario(self) -> None:
-        self.service.create_run("replacement-pressure", "idem-003")
+        self.service.create_run("replacement-gap", "idem-003")
 
         with self.assertRaisesRegex(WorkflowConflictError, "idempotency"):
             self.service.create_run("fax-routing", "idem-003")
 
     def test_full_review_lifecycle_is_serializable_and_append_only(self) -> None:
-        created = self.service.create_run("replacement-pressure", "idem-004")
+        created = self.service.create_run("replacement-gap", "idem-004")
         analyzing = self.service.start_analysis(created.run_id)
         decision = {"owner": "field_service_dispatch", "missing_evidence": ["serial"]}
         prepared = self.service.complete_analysis(
@@ -102,6 +102,26 @@ class WorkflowServiceTests(unittest.TestCase):
         self.assertEqual(serialized[3]["reason_code"], "READY_FOR_HANDOFF")
         self.assertEqual(self.service.get_events(created.run_id), events)
 
+    def test_bounded_evidence_correction_is_an_append_only_same_state_transition(self) -> None:
+        run = self.service.create_run("replacement-gap", "idem-correction")
+        self.service.start_analysis(run.run_id)
+        prepared = self.service.complete_analysis(
+            run.run_id,
+            AnalysisOutcome.REVIEW_REQUIRED,
+            result={"missing_evidence": ["serial_number", "actual_user"]},
+        )
+
+        corrected = self.service.record_correction(
+            run.run_id,
+            correction_id="serial_and_user_confirmed",
+            result={"missing_evidence": []},
+        )
+
+        self.assertEqual(corrected.state, WorkflowState.REVIEW_REQUIRED)
+        self.assertEqual(corrected.version, prepared.version + 1)
+        self.assertEqual(corrected.result["missing_evidence"], ())
+        self.assertEqual(self.service.get_events(run.run_id)[-1].event_type, "EVIDENCE_CORRECTED")
+
     def test_each_analysis_outcome_maps_to_its_authoritative_state(self) -> None:
         expected = {
             AnalysisOutcome.PREPARED: WorkflowState.PREPARED,
@@ -118,7 +138,7 @@ class WorkflowServiceTests(unittest.TestCase):
                 self.assertEqual(completed.state, state)
 
     def test_invalid_or_repeated_transition_raises_conflict(self) -> None:
-        run = self.service.create_run("replacement-pressure", "idem-005")
+        run = self.service.create_run("replacement-gap", "idem-005")
 
         with self.assertRaises(WorkflowConflictError):
             self.service.complete_analysis(run.run_id, AnalysisOutcome.PREPARED)
@@ -154,7 +174,7 @@ class WorkflowServiceTests(unittest.TestCase):
                     )
 
     def test_review_requires_allowlisted_decision_and_reason(self) -> None:
-        run = self.service.create_run("replacement-pressure", "idem-006")
+        run = self.service.create_run("replacement-gap", "idem-006")
         self.service.start_analysis(run.run_id)
         self.service.complete_analysis(run.run_id, AnalysisOutcome.REVIEW_REQUIRED)
 
@@ -167,7 +187,7 @@ class WorkflowServiceTests(unittest.TestCase):
         with self.assertRaises(WorkflowNotFoundError):
             self.service.get_run("unknown")
 
-        run = self.service.create_run("replacement-pressure", "idem-expiring")
+        run = self.service.create_run("replacement-gap", "idem-expiring")
         self.clock.current += timedelta(hours=24, seconds=1)
 
         with self.assertRaises(WorkflowNotFoundError):
@@ -175,9 +195,9 @@ class WorkflowServiceTests(unittest.TestCase):
         self.assertEqual(self.service.get_events(run.run_id), ())
 
     def test_demo_reset_removes_runs_events_and_idempotency_records(self) -> None:
-        old = self.service.create_run("replacement-pressure", "idem-reset")
+        old = self.service.create_run("replacement-gap", "idem-reset")
         self.service.reset_demo()
-        replacement = self.service.create_run("replacement-pressure", "idem-reset")
+        replacement = self.service.create_run("replacement-gap", "idem-reset")
 
         self.assertNotEqual(old.run_id, replacement.run_id)
         self.assertEqual(self.service.get_events(old.run_id), ())
@@ -195,7 +215,7 @@ class InMemoryRepositoryTests(unittest.TestCase):
         clock = MutableClock(datetime(2026, 9, 4, 14, 0, tzinfo=UTC))
         repository = InMemoryRunRepository(clock=clock)
         service = WorkflowService(repository=repository, clock=clock)
-        created = service.create_run("replacement-pressure", "optimistic")
+        created = service.create_run("replacement-gap", "optimistic")
         analyzing = service.start_analysis(created.run_id)
 
         with self.assertRaises(WorkflowConflictError):

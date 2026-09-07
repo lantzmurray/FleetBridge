@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from .engine import CONTRACTS
+from .engine import CONTRACTS, SUPPORTED_CATEGORIES
 from .models import Ticket
 
 _REQUIRED_FIELDS = {
@@ -20,7 +20,6 @@ _REQUIRED_FIELDS = {
     "site_access",
 }
 _OPTIONAL_FIELDS = {"actual_user_known"}
-_CATEGORIES = {"device_print_unavailable", "enterprise_fax", "managed_print_access"}
 _ACCESS_VALUES = {"escorted", "chaperone_required", "stationed", "unknown"}
 _SECRET_PATTERN = re.compile(r"(?:password|api[_-]?key|authorization|bearer)\s*[:=]", re.IGNORECASE)
 _CONTACT_PATTERN = re.compile(
@@ -56,7 +55,7 @@ def ticket_from_payload(payload: Any) -> Ticket:
     if priority not in {"P1", "P2"}:
         raise ValueError("priority must be P1 or P2")
     category = _bounded_text(payload["category"], "category", 64)
-    if category not in _CATEGORIES:
+    if category not in SUPPORTED_CATEGORIES:
         raise ValueError("category is not supported")
     summary = _bounded_text(payload["summary"], "summary", 1000)
     if _SECRET_PATTERN.search(summary):

@@ -1,0 +1,13 @@
+%% Reference flow only. The canonical editable architecture is architecture.drawio.
+flowchart LR
+    B["Coordinator browser<br/>synthetic scenarios only"] --> W["AWS WAF<br/>managed rules + run rate limit"]
+    W --> A["API Gateway<br/>public façade"]
+    A --> L["Lambda + FastAPI<br/>validation, quotas, reviews"]
+    L --> D["DynamoDB<br/>run/event ledger + 24h TTL"]
+    L --> R["Bedrock AgentCore Runtime<br/>Strands investigation worker"]
+    R --> M["Amazon Nova Lite<br/>Bedrock inference profile"]
+    R --> T["Bounded synthetic tools<br/>policy, history, access,<br/>routing, fulfillment, safety"]
+    R --> C["CloudWatch<br/>sanitized traces and metrics"]
+    L --> O["Decision card<br/>approve draft, request changes, reject"]
+    O --> H["Human coordinator"]
+    H -. "no integration or authority" .-> X["Dispatch, ordering,<br/>customer contact, closure"]

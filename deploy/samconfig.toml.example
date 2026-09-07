@@ -1,0 +1,19 @@
+version = 0.1
+
+[default.global.parameters]
+region = "us-east-1"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+stack_name = "fieldbridge-demo"
+resolve_image_repos = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+fail_on_empty_changeset = false
+parameter_overrides = [
+  "DeployAgentCore=false",
+  "DeploymentRevision=UNKNOWN",
+]

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FieldBridge prepares evidence-linked, human-reviewed field-service handoffs from bounded synthetic scenarios.">
+    <title>FieldBridge Service Desk</title>
+    <link rel="stylesheet" href="/static/app.css?v=0.3.0">
+    <script src="/static/app.js?v=0.3.0" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#operations">Skip to operations console</a>
+
+    <header class="app-topbar">
+      <a class="brand" href="#top" aria-label="FieldBridge Service Desk home">
+        <span class="brand-mark" aria-hidden="true">FB</span>
+        <span class="brand-copy"><strong>FieldBridge</strong><small>Service Desk</small></span>
+      </a>
+      <div class="topbar-search" aria-label="Search status">
+        <span aria-hidden="true">⌕</span>
+        <span>Search is limited to approved synthetic cases</span>
+      </div>
+      <div class="topbar-actions">
+        <span class="track-chip">Professional Agents</span>
+        <span class="boundary-chip"><span aria-hidden="true">●</span> Synthetic only</span>
+        <span class="avatar" aria-label="Coordinator profile">CO</span>
+      </div>
+    </header>
+
+    <div class="app-shell" id="top">
+      <aside class="sidebar" aria-label="Service desk navigation">
+        <div class="sidebar-label">Workspace</div>
+        <nav class="sidebar-nav">
+          <a class="nav-item active" href="#operations"><span aria-hidden="true">▦</span> My queue <b id="nav-my-queue-count">02</b></a>
+          <a class="nav-item" href="#operations"><span aria-hidden="true">◷</span> Awaiting review <b id="nav-awaiting-count">00</b></a>
+          <a class="nav-item" href="#operations"><span aria-hidden="true">✓</span> Prepared drafts <b id="nav-prepared-count">00</b></a>
+          <a class="nav-item" href="#audit-title"><span aria-hidden="true">≡</span> Audit history</a>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-label">FieldBridge guardrails</div>
+        <div class="sidebar-note">
+          <span class="guardrail-icon" aria-hidden="true">⌁</span>
+          <strong>Review-first routing</strong>
+          <p>Route, recommend, prepare, and record review. No operational execution.</p>
+        </div>
+        <div class="sidebar-footer"><span class="status-dot"></span> Local workspace <span class="muted">v0.2</span></div>
+      </aside>
+
+      <main class="main-content">
+        <section class="desk-intro" aria-labelledby="hero-title">
+          <div>
+            <p class="eyebrow">Professional Agents · Field operations</p>
+            <h1 id="hero-title">A technician can replace the device perfectly and still leave the customer unable to work.</h1>
+            <p>FieldBridge takes each ticket as far as bounded evidence allows, then hands a coordinator the route, SLA, contact, and one clear decision.</p>
+          </div>
+          <div class="desk-proof" aria-label="Operating proof">
+            <span><strong id="desk-ticket-count">02</strong> tickets in view</span>
+            <span><strong>0</strong> actions executed</span>
+          </div>
+        </section>
+
+        <section class="operations" id="operations" aria-labelledby="operations-title">
+          <div class="page-heading">
+            <div>
+              <p class="breadcrumb">Workspace / My queue</p>
+              <h2 id="operations-title">Service requests</h2>
+              <p class="page-subtitle">Triage, route, and prepare the next safe step from one queue.</p>
+            </div>
+            <div class="page-heading-meta"><span class="queue-pill"><span class="status-dot"></span> Queue synced</span><span class="last-sync">Just now</span></div>
+          </div>
+
+          <div class="command-bar">
+            <div class="command-label"><label for="scenario-select">Open request</label><span class="command-hint">Synthetic inbox</span></div>
+            <select id="scenario-select" name="scenario" aria-describedby="scenario-help">
+              <option value="">Loading approved cases…</option>
+            </select>
+            <span class="sr-only" id="scenario-help">Only seeded synthetic cases are accepted. Free-form tickets are not available.</span>
+            <button class="button button-quiet" type="button" id="reset-button">Reset view</button>
+            <button class="button button-primary" type="button" id="run-button"><span aria-hidden="true">✦</span><span>Run background sweep</span></button>
+          </div>
+          <p class="system-status" id="system-status" role="status" aria-live="polite">Loading the synthetic inbox…</p>
+
+          <div class="console-grid console-stack">
+            <section class="queue-top inbox" aria-labelledby="inbox-title">
+              <div class="inbox-toolbar"><div><h3 id="inbox-title">My queue</h3><span class="muted">Assigned to coordinator</span></div><span class="inbox-count" id="inbox-count">00</span></div>
+              <div class="queue-tabs" aria-label="Filter ticket queue">
+                <button class="queue-tab active" type="button" data-queue-filter="all">All <span id="queue-count-all">2</span></button>
+                <button class="queue-tab" type="button" data-queue-filter="open">Open <span id="queue-count-open">1</span></button>
+                <button class="queue-tab" type="button" data-queue-filter="prepared">Prepared <span id="queue-count-prepared">1</span></button>
+                <button class="queue-tab" type="button" data-queue-filter="awaiting">Awaiting <span id="queue-count-awaiting">0</span></button>
+                <button class="queue-tab" type="button" data-queue-filter="closed">Closed <span id="queue-count-closed">0</span></button>
+              </div>
+              <div class="queue-columns" aria-hidden="true">
+                <span data-queue-column="time">Time</span>
+                <span data-queue-column="summary">Summary</span>
+                <span data-queue-column="serial">Serial</span>
+                <span data-queue-column="application">Application</span>
+                <span data-queue-column="contact">Contact</span>
+                <span data-queue-column="client">Client</span>
+                <span data-queue-column="due">Due</span>
+                <span data-queue-column="ticket">Ticket</span>
+                <span data-queue-column="status">Status</span>
+              </div>
+              <div id="scenario-list" class="scenario-list"></div>
+              <p class="queue-empty" id="queue-empty" hidden>No tickets match this view.</p>
+              <div class="queue-footer"><span id="queue-row-count">2 tickets</span><span>Sorted by SLA</span></div>
+              <div class="docket-summary"><div class="docket-heading"><span class="docket-icon" aria-hidden="true">!</span><span>Decision docket</span><strong id="docket-count">0 exceptions</strong></div><p>Routine drafts stay quiet. Exceptions earn attention.</p></div>
+            </section>
+
+            <div class="ticket-record case-workspace">
+              <div class="workspace-header">
+                <div><p class="case-kicker">Service request / synthetic record</p><h3 id="case-title">Select a case to begin</h3><div class="case-meta"><span id="ticket-account">—</span><span>·</span><span id="ticket-requester">—</span><span>·</span><span id="ticket-channel">—</span></div></div>
+                <div class="status-cluster"><span class="mode-badge" id="mode-badge" data-mode="idle">Idle</span><span class="state-badge" id="state-badge">Created</span></div>
+              </div>
+
+              <section class="ticket-properties" aria-label="Current ticket status">
+                <div><span>Status</span><strong id="ticket-status">Open</strong></div>
+                <div><span>Requester</span><strong id="ticket-requester-detail">—</strong></div>
+                <div><span>Assigned team</span><strong id="ticket-assigned-team">—</strong></div>
+                <div><span>SLA target</span><strong id="ticket-sla-preview">—</strong></div>
+              </section>
+
+              <div class="before-after">
+                <article class="before-panel" aria-labelledby="before-title"><div class="ticket-label"><span class="ticket-icon" aria-hidden="true">▤</span> Incoming note</div><h4 id="before-title">Before · thin ticket</h4><p class="ticket-note" id="source-note">Choose a synthetic inbox case. No customer data or free-form prompt is accepted.</p><div class="ticket-footer"><span>Source: seeded inbox</span><span class="triage-chip">Needs triage</span></div></article>
+                <div class="handoff-arrow" aria-hidden="true">→</div>
+                <article class="after-panel" aria-labelledby="after-title"><div class="ticket-label"><span class="ticket-icon ready" aria-hidden="true">✓</span> Prepared packet</div><h4 id="after-title">After · review-ready handoff</h4><p id="packet-summary">Evidence, ownership, blocked actions, and closure proof will appear here for human review.</p><div class="ticket-footer"><span>Generated from bounded evidence</span><span class="packet-chip">Draft</span></div></article>
+              </div>
+
+              <div class="evidence-layout">
+                <article class="decision-card" aria-labelledby="decision-title">
+                  <div class="panel-heading"><div><p class="eyebrow">Decision card</p><h3 id="decision-title">Awaiting investigation</h3></div><span class="exception-flag" id="exception-flag">No run</span></div>
+                  <dl class="decision-grid"><div><dt>SLA deadline</dt><dd id="deadline">—</dd></div><div><dt>Accountable owner</dt><dd id="owner">—</dd></div><div class="wide"><dt>Contracted team</dt><dd id="route-team">—</dd></div><div><dt>Internal routing team</dt><dd id="internal-team">—</dd></div><div><dt>Point of contact</dt><dd id="point-of-contact">—</dd></div><div class="wide"><dt>Schedule recommendation</dt><dd id="schedule-recommendation">—</dd></div><div class="wide"><dt>Escalation path</dt><dd id="escalation-recommendation">—</dd></div><div class="wide"><dt>Dispatch decision</dt><dd id="dispatch-recommendation">—</dd></div><div class="wide"><dt>Access constraint</dt><dd id="access-constraint">—</dd></div><div class="wide"><dt>Fulfillment plan</dt><dd id="fulfillment">—</dd></div></dl>
+                  <div class="evidence-groups"><section aria-labelledby="missing-title"><h4 id="missing-title">Missing evidence</h4><ul id="missing-evidence"><li>Not evaluated</li></ul></section><section aria-labelledby="restore-title"><h4 id="restore-title">Restoration sequence</h4><ol id="restoration-steps"><li>Not evaluated</li></ol></section><section aria-labelledby="closure-title"><h4 id="closure-title">Closure proof</h4><ul id="closure-proof"><li>Not evaluated</li></ul></section><section class="blocked-group" aria-labelledby="blocked-title"><h4 id="blocked-title">Blocked actions</h4><ul id="blocked-actions"><li>Dispatch, contact, ordering, ticket mutation, and closure remain blocked.</li></ul></section></div>
+                </article>
+
+                <aside class="trace-panel" aria-labelledby="trace-title"><div class="panel-heading"><div><p class="eyebrow">Activity</p><h3 id="trace-title">Investigation timeline</h3></div><span class="trace-correlation" id="correlation-id">—</span></div><ol id="tool-timeline" class="tool-timeline"><li><span class="trace-dot" aria-hidden="true"></span><div><strong>Waiting for sweep</strong><small>Sanitized tool events appear here after a run.</small></div></li></ol></aside>
+              </div>
+
+              <section class="review-panel" aria-labelledby="review-title"><div><p class="eyebrow">Human boundary / approval</p><h3 id="review-title">Review the route and onsite decision</h3><p>FieldBridge prepares the next step. A person decides whether to request details, route the draft, or dispatch onsite.</p></div><div class="review-controls"><button class="button button-quiet" id="correction-button" type="button" disabled>Apply approved synthetic evidence</button><button class="button button-followup" id="request-info-button" type="button" disabled>Prepare information request</button><label for="reason-code">Review reason</label><select id="reason-code" disabled><option value="evidence_verified">Evidence verified</option><option value="insufficient_evidence">Insufficient evidence</option><option value="policy_exception">Policy exception</option><option value="routing_correction">Routing correction</option></select><div class="button-group" aria-label="Draft review actions"><button class="button button-approve review-action" type="button" data-decision="approve" disabled>Approve draft</button><button class="button button-quiet review-action" type="button" data-decision="request_changes" disabled>Request changes</button><button class="button button-reject review-action" type="button" data-decision="reject" disabled>Reject</button></div></div></section>
+
+              <section class="outreach-draft" id="outreach-draft" aria-labelledby="outreach-title" hidden>
+                <div class="outreach-heading"><div><p class="eyebrow">Requester follow-up</p><h3 id="outreach-title">Information request prepared</h3></div><span>Draft only · not sent</span></div>
+                <p id="outreach-copy">Please confirm the missing information so the coordinator can determine the correct route and whether onsite service is needed.</p>
+                <div class="outreach-foot"><span>Recipient: synthetic requester role</span><strong>Human send required</strong></div>
+              </section>
+
+              <section class="audit-panel" aria-labelledby="audit-title"><div class="panel-heading"><div><p class="eyebrow">Append-only record</p><h3 id="audit-title">Audit timeline</h3></div><span id="revision-label">Revision · local</span></div><ol id="audit-timeline"><li>No run events recorded.</li></ol></section>
+            </div>
+          </div>
+        </section>
+
+        <section class="boundary-section" aria-labelledby="boundary-title"><div><p class="eyebrow">The operating boundary</p><h2 id="boundary-title">Prepare everything.<br><em>Execute nothing.</em></h2></div><ul><li><span>01</span> Inspect approved synthetic evidence</li><li><span>02</span> Route to the contracted team</li><li><span>03</span> Recommend schedule, contact, and escalation</li><li class="blocked"><span>×</span> Never execute dispatch, order, contact, mutate, or close</li></ul></section>
+      </main>
+    </div>
+
+    <footer><p>FieldBridge <span>·</span> Professional Agents track</p><p>Generalized field-service experience. Every case, organization, contract, identifier, and result shown here is synthetic.</p></footer>
+  </body>
+</html>
