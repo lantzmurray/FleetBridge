@@ -107,20 +107,10 @@ set -a; source .env; set +a
 
 Missing or failed live configuration never masquerades as a successful agent run.
 
-For a repeatable, credential-free voiceover recording, run the Playwright
-rehearsal and recorder. The output is explicitly labeled synthetic/local and
-must not be presented as live AWS evidence:
-
-```bash
-.venv/bin/python scripts/record_demo.py --serve --port 8081
-.venv/bin/python scripts/record_demo.py --rehearse
-.venv/bin/python scripts/record_demo.py
-```
-
-The `--serve` option opens the same interactive rehearsal used by the browser
-tests, with `REHEARSAL` and `scripted-local-fixture` provenance visible in the UI.
-The WebM and checkpoint screenshots are written to the ignored
-`output/playwright/` directory.
+The browser flow is exercised with a Playwright rehearsal harness. Recording
+scripts and narration materials are kept out of the repository; the output is
+explicitly labeled synthetic/local and must not be presented as live AWS
+evidence.
 
 ## Verify
 
@@ -187,17 +177,12 @@ See [architecture and trust boundaries](docs/ARCHITECTURE.md) and the
 No field impact, time saved, SLA improvement, deployment, or model execution is claimed without
 captured evidence from the exact submitted revision.
 
-## Submission package
+## Documentation
 
-- [Four-minute continuous demo script](docs/DEMO_SCRIPT.md)
-- [Pitch practice card and speaking beats](docs/PITCH_PRACTICE.md)
 - [Evaluation report](docs/EVALUATION_REPORT.md)
-- [Finalist-readiness score and release gates](docs/FINALIST_READINESS.md)
-- [Judge story](docs/JUDGE_STORY.md)
 - [Architecture](docs/ARCHITECTURE.md)
-- [Devpost draft and checklist](docs/DEVPOST_SUBMISSION.md)
-- [Builder Center post drafts](docs/BUILDER_POSTS.md)
 - [Synthetic evidence boundary](docs/EVIDENCE_BOUNDARY.md)
+- [Deployment runbook](docs/DEPLOYMENT.md)
 
 ## Synthetic-only boundary
 

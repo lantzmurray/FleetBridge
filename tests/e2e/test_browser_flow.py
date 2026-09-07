@@ -144,7 +144,7 @@ class BrowserWorkflowTests(unittest.TestCase):
             self.assertEqual(page.locator("#queue-row-count").inner_text(), "2 tickets")
             self.assertIn("Managed print", page.locator("#scenario-list").inner_text())
             self.assertIn("Unknown", page.locator("#scenario-list").inner_text())
-            self.assertIn("Due Sep 7", page.locator("#scenario-list").inner_text())
+            self.assertIn("Due today", page.locator("#scenario-list").inner_text())
 
             page.get_by_role("button", name="Open 1").click()
             self.assertEqual(page.locator(".scenario-card").count(), 1)

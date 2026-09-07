@@ -178,6 +178,35 @@ class FieldBridgeApiTests(unittest.TestCase):
         self.assertEqual(denied.json()["detail"], "public demo run quota exceeded")
         self.assertNotIn("testclient", repr(quota.snapshot()))
 
+    def test_forwarded_callers_get_separate_quota_buckets(self) -> None:
+        quota = InMemoryQuotaService(
+            hmac_secret=b"quota-forwarded-test",
+            per_client_daily_limit=1,
+            global_daily_limit=5,
+        )
+        set_quota_service(quota)
+
+        first_judge = self.client.post(
+            "/api/v1/runs",
+            json={"scenario_id": "fax-routing"},
+            headers={"Idempotency-Key": "fwd-quota-001", "X-Forwarded-For": "203.0.113.9"},
+        )
+        second_judge = self.client.post(
+            "/api/v1/runs",
+            json={"scenario_id": "fax-routing"},
+            headers={"Idempotency-Key": "fwd-quota-002", "X-Forwarded-For": "203.0.113.10"},
+        )
+        first_judge_repeat = self.client.post(
+            "/api/v1/runs",
+            json={"scenario_id": "fax-routing"},
+            headers={"Idempotency-Key": "fwd-quota-003", "X-Forwarded-For": "203.0.113.9"},
+        )
+
+        self.assertEqual(first_judge.status_code, 201)
+        self.assertEqual(second_judge.status_code, 201)
+        self.assertEqual(first_judge_repeat.status_code, 429)
+        self.assertNotIn("203.0.113", repr(quota.snapshot()))
+
     def test_run_and_sanitized_events_can_be_retrieved(self) -> None:
         created = self.client.post(
             "/api/v1/runs",

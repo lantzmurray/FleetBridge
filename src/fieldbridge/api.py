@@ -88,6 +88,21 @@ def _quota_service(request: Request) -> QuotaService:
     return request.app.state.quota_service
 
 
+def _client_source(request: Request) -> str:
+    """Derive a stable quota source without storing raw addresses.
+
+    Behind the submitted API Gateway/Lambda topology every direct peer is the
+    gateway itself, so the first ``X-Forwarded-For`` entry is the caller. The
+    value is only ever HMAC-derived inside the quota service.
+    """
+
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    first_hop = forwarded.split(",")[0].strip() if forwarded else ""
+    if first_hop:
+        return first_hop
+    return request.client.host if request.client is not None else "unknown-source"
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(
     _request: Request, _error: RequestValidationError
@@ -167,7 +182,7 @@ def create_run(
 ) -> dict[str, object]:
     if idempotency_key is None or not 8 <= len(idempotency_key) <= 128:
         raise HTTPException(status_code=400, detail="valid idempotency key required")
-    source_identifier = request.client.host if request.client is not None else "unknown-source"
+    source_identifier = _client_source(request)
     quota = _quota_service(request).check_and_consume(source_identifier)
     if not quota.allowed:
         raise HTTPException(status_code=429, detail="public demo run quota exceeded")
