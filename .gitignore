@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 .venv/
+.aws-sam/
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -14,7 +15,8 @@ dist/
 build/
 *.egg-info/
 
-# Internal rehearsal, recording, and planning artifacts (not part of the judged submission)
+# Local rehearsal and recording artifacts. Release-readiness and submission
+# documents are intentionally tracked because validate_release.py requires them.
 scripts/record_demo.py
 scripts/demo_walkthrough.py
 docs/slides/
@@ -22,6 +24,3 @@ docs/DEMO_SCRIPT.md
 docs/PITCH_PRACTICE.md
 docs/SPEAKING_SCRIPT.md
 docs/JUDGE_STORY.md
-docs/FINALIST_READINESS.md
-docs/DEVPOST_SUBMISSION.md
-docs/BUILDER_POSTS.md
