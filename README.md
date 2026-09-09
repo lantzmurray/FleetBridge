@@ -170,9 +170,14 @@ See [architecture and trust boundaries](docs/ARCHITECTURE.md) and the
 | Local policy, API, workflow, AWS-adapter, worker, and browser tests | Implemented; verify on this checkout |
 | Synthetic 15-case local evaluation | **VERIFIED:** 15/15 passed in three attempts; local degraded mode is labeled |
 | Local Bedrock/Strands run | **VERIFIED 2026-09-07:** replacement and fax scenarios completed with distinct Nova Lite tool paths |
-| AgentCore deployment and CloudWatch trace | **UNKNOWN / NOT YET VERIFIED** |
-| Public repository and application URL | **UNKNOWN / NOT YET VERIFIED** |
+| AgentCore deployment and trace | **VERIFIED 2026-09-09:** live Nova Lite runs via AgentCore runtime `arn:aws:bedrock-agentcore:us-east-1:860738048934:runtime/FieldBridgeAgent-Pk5MSF41ZM`; 15/15 product evals passed three consecutive attempts against the deployment; X-Ray traces captured |
+| Public repository and application URL | **VERIFIED:** [github.com/lantzmurray/FleetBridge](https://github.com/lantzmurray/FleetBridge) with passing Python 3.12 CI; public API at `https://mh6bxtoj2m.execute-api.us-east-1.amazonaws.com/Prod/` |
 | Public demo video and Builder Center posts | **UNKNOWN / NOT YET VERIFIED** |
+
+Deployed runtime artifacts were built from revision `f9bc5cc68824`
+(façade image digest `sha256:15650c712bd82366af8fdbc5dd8beb78fb193eb066d6cf7cd1cb232ed2a070c3`;
+agent image digest `sha256:0db6ffe3001ccb67fbcf5225c97bb140c13b70dfff8991ae35b89c371108e6f2`).
+Commits after that revision are documentation-only.
 
 No field impact, time saved, SLA improvement, deployment, or model execution is claimed without
 captured evidence from the exact submitted revision.

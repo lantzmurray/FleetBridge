@@ -111,17 +111,17 @@ of scope here.
 
 | Field | Value |
 | --- | --- |
-| Public GitHub repository | UNKNOWN |
-| Live application | UNKNOWN |
+| Public GitHub repository | VERIFIED: https://github.com/lantzmurray/FleetBridge |
+| Live application | VERIFIED: https://mh6bxtoj2m.execute-api.us-east-1.amazonaws.com/Prod/ |
 | Public English demo video (`<5` minutes) | UNKNOWN |
-| Git revision | UNKNOWN |
-| Façade image digest | UNKNOWN |
-| AgentCore image digest | UNKNOWN |
-| AgentCore runtime ARN/revision | UNKNOWN |
+| Git revision | VERIFIED: `f9bc5cc68824` (runtime artifacts; later commits are docs-only) |
+| Façade image digest | VERIFIED: `sha256:15650c712bd82366af8fdbc5dd8beb78fb193eb066d6cf7cd1cb232ed2a070c3` |
+| AgentCore image digest | VERIFIED: `sha256:0db6ffe3001ccb67fbcf5225c97bb140c13b70dfff8991ae35b89c371108e6f2` |
+| AgentCore runtime ARN/revision | VERIFIED: `arn:aws:bedrock-agentcore:us-east-1:860738048934:runtime/FieldBridgeAgent-Pk5MSF41ZM` |
 | Local Bedrock model run | VERIFIED 2026-09-07 for both synthetic scenarios |
-| AgentCore run and CloudWatch trace | UNKNOWN |
-| 15-case `pass^3` evaluation report | UNKNOWN |
-| Clean Python 3.12 CI result | UNKNOWN |
+| AgentCore run and CloudWatch trace | VERIFIED 2026-09-09: live Nova Lite runs through AgentCore with X-Ray trace evidence |
+| 15-case `pass^3` evaluation report | VERIFIED 2026-09-09 against the public URL |
+| Clean Python 3.12 CI result | VERIFIED on the public repository |
 | AWS Builder ID field complete | UNKNOWN |
 
 ## Pre-existing tools and disclosure

@@ -44,8 +44,8 @@ Globals:
         DEMO_MODE: synthetic_only
         RUN_LEDGER_TABLE: !Ref RunLedger
         SOURCE_HMAC_SECRET_ARN: !Ref SourceHmacSecret
-        DEMO_CLIENT_DAILY_LIMIT: "20"
-        DEMO_GLOBAL_DAILY_LIMIT: "500"
+        DEMO_CLIENT_DAILY_LIMIT: "100"
+        DEMO_GLOBAL_DAILY_LIMIT: "1000"
         AGENTCORE_RUNTIME_ARN: !If
           - CreateAgentCore
           - !GetAtt FieldBridgeAgentRuntime.AgentRuntimeArn
@@ -290,7 +290,7 @@ Resources:
             RateBasedStatement:
               AggregateKeyType: IP
               EvaluationWindowSec: 300
-              Limit: 20
+              Limit: 100
               ScopeDownStatement:
                 AndStatement:
                   Statements:

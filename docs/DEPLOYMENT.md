@@ -1,7 +1,23 @@
 # AWS Deployment and Verification Runbook
 
-Deployment status: **UNKNOWN / NOT YET VERIFIED**. Do not replace this label or
-publish a URL until every release gate below passes in the target AWS account.
+Deployment status: **VERIFIED 2026-09-09** (stack `fieldbridge-demo`, region
+`us-east-1`, account `860738048934`).
+
+| Artifact | Verified value |
+| --- | --- |
+| Public API URL | `https://mh6bxtoj2m.execute-api.us-east-1.amazonaws.com/Prod/` |
+| Git revision (runtime artifacts) | `f9bc5cc68824` |
+| AgentCore runtime ARN | `arn:aws:bedrock-agentcore:us-east-1:860738048934:runtime/FieldBridgeAgent-Pk5MSF41ZM` |
+| Agent image (ECR `fieldbridge-agent`) | digest `sha256:0db6ffe3001ccb67fbcf5225c97bb140c13b70dfff8991ae35b89c371108e6f2` |
+| Façade image | digest `sha256:15650c712bd82366af8fdbc5dd8beb78fb193eb066d6cf7cd1cb232ed2a070c3` |
+| Run ledger | DynamoDB `fieldbridge-demo-RunLedger-1B2FN4KK604HQ` (24h TTL) |
+| Model | `us.amazon.nova-lite-v1:0` (live runs confirmed in run payloads and X-Ray traces) |
+| Product evals | 15/15 passed in three consecutive attempts against the public URL |
+| CI | Python 3.12 workflow green on the public repository |
+
+Runtime artifacts were built from revision `f9bc5cc68824`; later commits are
+documentation-only. Re-verify this table (and rebuild both images) before
+claiming any later revision as the submitted one.
 
 The submitted design uses an ARM64 FastAPI container in AgentCore Runtime and a
 separate FastAPI façade in API Gateway/Lambda. The façade stores synthetic runs
