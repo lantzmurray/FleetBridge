@@ -96,8 +96,12 @@
     return `fieldbridge-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
 
+  // Resolve API paths against the document directory so the UI works both at
+  // the root and behind a gateway stage prefix such as /Prod/.
+  const apiBase = window.location.pathname.replace(/\/[^/]*$/, "");
+
   async function request(path, options) {
-    const response = await window.fetch(path, options);
+    const response = await window.fetch(`${apiBase}${path}`, options);
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
       throw new Error(payload.detail || "The demo service could not complete the request.");

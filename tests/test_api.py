@@ -48,8 +48,8 @@ class FieldBridgeApiTests(unittest.TestCase):
         self.assertIn("Run background sweep", response.text)
         self.assertIn("Decision docket", response.text)
         self.assertIn('aria-live="polite"', response.text)
-        self.assertIn('href="/static/app.css?v=0.3.0"', response.text)
-        self.assertIn('src="/static/app.js?v=0.3.0"', response.text)
+        self.assertIn('href="static/app.css?v=0.3.0"', response.text)
+        self.assertIn('src="static/app.js?v=0.3.0"', response.text)
 
     def test_security_headers_are_set_on_html_and_api_responses(self) -> None:
         for response in (self.client.get("/"), self.client.get("/health")):
