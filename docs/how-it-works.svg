@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">How FieldBridge works</title>
+  <desc id="desc">A thin ticket enters, a Strands agent investigates it with eight read-only tools, deterministic code validates a decision card, and a human coordinator approves, requests changes, or rejects it. Operational actions stay blocked.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6b778c"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="920" height="300" fill="#f4f5f7"/>
+
+  <!-- Step 1: thin ticket -->
+  <rect x="24" y="60" width="188" height="128" rx="4" fill="#ffffff" stroke="#c1c7d0"/>
+  <rect x="24" y="60" width="188" height="26" rx="4" fill="#dfe1e6"/>
+  <text x="36" y="77" font-size="11" font-weight="700" fill="#42526e">THIN TICKET</text>
+  <text x="36" y="106" font-size="11.5" fill="#172b4d">&#8220;Urgent&#8212;replace the printer.</text>
+  <text x="36" y="122" font-size="11.5" fill="#172b4d">Send someone today.&#8221;</text>
+  <text x="36" y="148" font-size="10.5" fill="#6b778c">No serial. No actual user.</text>
+  <text x="36" y="163" font-size="10.5" fill="#6b778c">No site-access detail.</text>
+
+  <!-- Step 2: Strands agent -->
+  <rect x="252" y="42" width="220" height="164" rx="4" fill="#ffffff" stroke="#c3baf1"/>
+  <rect x="252" y="42" width="220" height="3" fill="#6554c0"/>
+  <text x="268" y="66" font-size="11" font-weight="700" fill="#5e4db2" letter-spacing=".06em">STRANDS AGENT</text>
+  <text x="268" y="84" font-size="10.5" fill="#6b778c">chooses read-only tools:</text>
+  <g font-size="10.5" font-family="ui-monospace, Menlo, monospace" fill="#172b4d">
+    <text x="268" y="106">load_case &#183; contract_policy</text>
+    <text x="268" y="122">service_history &#183; site_access</text>
+    <text x="268" y="138">routing &#183; fulfillment</text>
+    <text x="268" y="154">validate_draft &#183; safety</text>
+  </g>
+  <rect x="268" y="168" width="188" height="22" rx="3" fill="#eae6ff"/>
+  <text x="278" y="183" font-size="10" font-weight="700" fill="#5e4db2">Nova Lite &#183; AgentCore Runtime</text>
+
+  <!-- Step 3: decision card -->
+  <rect x="512" y="42" width="188" height="164" rx="4" fill="#ffffff" stroke="#c1c7d0"/>
+  <rect x="512" y="42" width="188" height="26" rx="4" fill="#deebff"/>
+  <text x="524" y="59" font-size="11" font-weight="700" fill="#0747a9">DECISION CARD</text>
+  <g font-size="10.5" fill="#172b4d">
+    <text x="524" y="86">SLA deadline: today 5 PM</text>
+    <text x="524" y="102">Contracted team + owner</text>
+    <text x="524" y="118">Chaperone required onsite</text>
+    <text x="524" y="134">Missing: serial, actual user</text>
+    <text x="524" y="150">Restoration + closure proof</text>
+  </g>
+  <rect x="524" y="164" width="164" height="22" rx="3" fill="#f4f5f7"/>
+  <text x="534" y="179" font-size="10" fill="#6b778c">checked by deterministic policy</text>
+
+  <!-- Step 4: human review -->
+  <rect x="740" y="60" width="156" height="128" rx="4" fill="#ffffff" stroke="#c1c7d0"/>
+  <rect x="740" y="60" width="156" height="26" rx="4" fill="#e3fcef"/>
+  <text x="752" y="77" font-size="11" font-weight="700" fill="#006644">HUMAN REVIEW</text>
+  <g font-size="11" fill="#172b4d">
+    <text x="752" y="104">&#10003; Approve draft</text>
+    <text x="752" y="122">&#8635; Request changes</text>
+    <text x="752" y="140">&#10007; Reject</text>
+  </g>
+  <text x="752" y="166" font-size="10" fill="#6b778c">recorded in an</text>
+  <text x="752" y="180" font-size="10" fill="#6b778c">append-only audit log</text>
+
+  <!-- arrows -->
+  <line x1="212" y1="124" x2="248" y2="124" stroke="#6b778c" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="472" y1="124" x2="508" y2="124" stroke="#6b778c" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="700" y1="124" x2="736" y2="124" stroke="#6b778c" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- boundary strip -->
+  <rect x="24" y="232" width="872" height="44" rx="4" fill="#ffebe6" stroke="#ffbdad"/>
+  <text x="40" y="259" font-size="11" font-weight="700" fill="#bf2600">ALWAYS BLOCKED, IN EVERY MODE</text>
+  <text x="276" y="259" font-size="11" fill="#bf2600">execute dispatch &#183; order parts &#183; contact customers &#183; mutate tickets &#183; close work</text>
+</svg>
