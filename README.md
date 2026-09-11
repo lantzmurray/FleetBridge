@@ -82,8 +82,7 @@ activity and history panels:
 A SAM template defines an API Gateway/Lambda FastAPI façade with WAF, a 24-hour DynamoDB
 run-and-review ledger, Secrets Manager HMAC quotas, least-privilege IAM, and an AgentCore
 Runtime worker running Strands with Nova Lite. Full details:
-[architecture and trust boundaries](docs/ARCHITECTURE.md) ·
-[deployment runbook](docs/DEPLOYMENT.md) · editable
+[architecture and trust boundaries](docs/ARCHITECTURE.md) · editable
 [draw.io diagram](docs/architecture.drawio).
 
 ## Verify
@@ -120,18 +119,16 @@ idempotency, TTL metadata, generic errors, and browser security headers.
 | Public repository, CI, and application URL | **VERIFIED:** public repo with passing Python 3.12 CI; live API serving the UI you see above |
 | Public demo video and Builder Center posts | **UNKNOWN / NOT YET VERIFIED** |
 
-Deployed runtime artifacts were built from revision `f9bc5cc68824`; the live façade serves
-the UI-only layers `a4cec75` and `edf37c3` (Jira-style service desk redesign) on top of that
-backend — layered digests in [recording deployment](docs/RECORDING_DEPLOYMENT.md). If Bedrock
-or AgentCore is unavailable, FieldBridge fails closed to a deterministic packet labeled
+The live façade uses the Jira-style service desk redesign on top of the
+AgentCore-backed workflow. If Bedrock or AgentCore is unavailable, FieldBridge
+fails closed to a deterministic packet labeled
 `DEGRADED_REVIEW_REQUIRED` and disables approval rather than fabricating a tool trace.
 
 ## Documentation
 
 - [How it works diagram](docs/how-it-works.svg) · [AWS architecture](docs/architecture.svg)
 - [Architecture and trust boundaries](docs/ARCHITECTURE.md)
-- [Deployment runbook](docs/DEPLOYMENT.md) · [Recording deployment](docs/RECORDING_DEPLOYMENT.md)
-- [Evaluation report](docs/EVALUATION_REPORT.md) · [Synthetic evidence boundary](docs/EVIDENCE_BOUNDARY.md)
+- [Synthetic evidence boundary](docs/EVIDENCE_BOUNDARY.md)
 
 ## Synthetic-only boundary
 

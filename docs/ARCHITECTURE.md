@@ -10,9 +10,9 @@ architecture.
 [`architecture.mmd`](architecture.mmd) is retained as a compact flow reference,
 but the draw.io file is the canonical diagram. It shows the submission
 architecture, not proof that the AWS resources are currently live.
-Deployment URL, AgentCore runtime ARN/revision, Bedrock run evidence, and
-CloudWatch trace ID remain **UNKNOWN** until the verification gates in
-[`DEPLOYMENT.md`](DEPLOYMENT.md) pass.
+Deployment URLs, runtime identifiers, and cloud trace evidence are intentionally
+kept out of this public architecture document. They belong in private release
+notes rather than the public repository.
 
 ## Trust boundaries
 
