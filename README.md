@@ -177,7 +177,9 @@ See [architecture and trust boundaries](docs/ARCHITECTURE.md) and the
 Deployed runtime artifacts were built from revision `f9bc5cc68824`
 (façade image digest `sha256:15650c712bd82366af8fdbc5dd8beb78fb193eb066d6cf7cd1cb232ed2a070c3`;
 agent image digest `sha256:0db6ffe3001ccb67fbcf5225c97bb140c13b70dfff8991ae35b89c371108e6f2`).
-Commits after that revision are documentation-only.
+The live façade additionally serves the UI-only layers `a4cec75` and `edf37c3`
+(Jira-style service desk redesign) on top of that backend; see
+[recording deployment](RECORDING_DEPLOYMENT.md) for the layered façade digests.
 
 No field impact, time saved, SLA improvement, deployment, or model execution is claimed without
 captured evidence from the exact submitted revision.
