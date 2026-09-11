@@ -33,8 +33,16 @@
     },
     runButton: document.querySelector("#run-button"),
     resetButton: document.querySelector("#reset-button"),
+    transitionCluster: document.querySelector("#transition-cluster"),
+    ticketClientDetail: document.querySelector("#ticket-client-detail"),
+    ticketApplicationDetail: document.querySelector("#ticket-application-detail"),
+    ticketChannelDetail: document.querySelector("#ticket-channel-detail"),
+    ticketSerialDetail: document.querySelector("#ticket-serial-detail"),
+    ticketContractDetail: document.querySelector("#ticket-contract-detail"),
+    ticketContactDetail: document.querySelector("#ticket-contact-detail"),
     systemStatus: document.querySelector("#system-status"),
     caseTitle: document.querySelector("#case-title"),
+    ticketKeyBreadcrumb: document.querySelector("#ticket-key-breadcrumb"),
     ticketAccount: document.querySelector("#ticket-account"),
     ticketRequester: document.querySelector("#ticket-requester"),
     ticketChannel: document.querySelector("#ticket-channel"),
@@ -64,6 +72,7 @@
     closureProof: document.querySelector("#closure-proof"),
     blockedActions: document.querySelector("#blocked-actions"),
     correlationId: document.querySelector("#correlation-id"),
+    decisionCard: document.querySelector(".decision-card"),
     toolTimeline: document.querySelector("#tool-timeline"),
     auditTimeline: document.querySelector("#audit-timeline"),
     revisionLabel: document.querySelector("#revision-label"),
@@ -79,6 +88,32 @@
     decision: "request_changes",
     reason_code: "insufficient_evidence",
   });
+
+  function issueIcon() {
+    const svgUrl = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgUrl, "svg");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    svg.setAttribute("width", "15");
+    svg.setAttribute("height", "15");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const card = document.createElementNS(svgUrl, "rect");
+    card.setAttribute("x", "2.75");
+    card.setAttribute("y", "1.75");
+    card.setAttribute("width", "10.5");
+    card.setAttribute("height", "12.5");
+    card.setAttribute("rx", "1.5");
+    card.setAttribute("fill", "#DEEBFF");
+    card.setAttribute("stroke", "#0747A9");
+    card.setAttribute("stroke-width", "1");
+    const lines = document.createElementNS(svgUrl, "path");
+    lines.setAttribute("d", "M5.5 5.5h5M5.5 8h5M5.5 10.5h3");
+    lines.setAttribute("stroke", "#0747A9");
+    lines.setAttribute("stroke-width", "1.1");
+    lines.setAttribute("stroke-linecap", "round");
+    svg.append(card, lines);
+    return svg;
+  }
 
   function updateState(changes) {
     state = Object.freeze({ ...state, ...changes });
@@ -147,6 +182,29 @@
     return labels[run.state] || "Open";
   }
 
+  function ticketPillLabel(scenario) {
+    const run = runFor(scenario);
+    if (!run) return scenario.queue_status === "PREPARED" ? "Prepared" : "Open";
+    const labels = {
+      PREPARED: "Prepared",
+      REVIEW_REQUIRED: "Awaiting",
+      DEGRADED_REVIEW_REQUIRED: "Review",
+      CHANGES_REQUESTED: "Awaiting",
+      APPROVED_DRAFT: "Approved",
+      REJECTED: "Rejected",
+    };
+    return labels[run.state] || "Open";
+  }
+
+  function formatDeadline(value) {
+    const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/.exec(value);
+    if (!match) return value;
+    const [, date, hours, minutes] = match;
+    const hour = Number(hours) % 12 || 12;
+    const period = Number(hours) < 12 ? "AM" : "PM";
+    return `${date} · ${hour}:${minutes} ${period}`;
+  }
+
   function queueCounts() {
     return state.scenarios.reduce(
       (counts, scenario) => {
@@ -157,18 +215,29 @@
     );
   }
 
+  function initials(name) {
+    return name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0].toUpperCase()).join("");
+  }
+
+  function contactCell(scenario) {
+    const cell = node("span", undefined, "queue-cell queue-cell-contact");
+    cell.append(node("span", initials(scenario.contact), "cell-avatar"));
+    cell.append(node("span", scenario.contact));
+    return cell;
+  }
+
   function renderScenarios() {
     elements.select.replaceChildren();
     elements.list.replaceChildren();
     const counts = queueCounts();
-    elements.inboxCount.textContent = String(counts.all).padStart(2, "0");
-    elements.deskTicketCount.textContent = String(counts.all).padStart(2, "0");
+    elements.inboxCount.textContent = String(counts.all);
+    elements.deskTicketCount.textContent = String(counts.all);
     Object.entries(elements.queueCounts).forEach(([name, element]) => {
       element.textContent = String(counts[name]);
     });
-    elements.navCounts.all.textContent = String(counts.all).padStart(2, "0");
-    elements.navCounts.awaiting.textContent = String(counts.awaiting).padStart(2, "0");
-    elements.navCounts.prepared.textContent = String(counts.prepared).padStart(2, "0");
+    elements.navCounts.all.textContent = String(counts.all);
+    elements.navCounts.awaiting.textContent = String(counts.awaiting);
+    elements.navCounts.prepared.textContent = String(counts.prepared);
 
     state.scenarios.forEach((scenario) => {
       const option = node("option", `${scenario.ticket_id} · ${scenario.title}`);
@@ -190,18 +259,21 @@
       summary.append(node("small", scenario.summary));
       const ticket = node("span", undefined, "queue-cell queue-ticket");
       ticket.append(node("strong", scenario.ticket_id));
-      const status = node("span", ticketStatusLabel(scenario), "queue-status");
+      const status = node("span", ticketPillLabel(scenario), "queue-status");
       status.dataset.status = queueCategory(scenario);
+      const icon = node("span", undefined, "queue-cell queue-cell-icon");
+      icon.append(issueIcon());
       const cells = [
-        [scenario.received_at, "time"],
-        [summary, "summary"],
-        [scenario.serial, "serial"],
-        [scenario.application, "application"],
-        [scenario.contact, "contact"],
-        [scenario.client, "client"],
-        [scenario.due, "due"],
+        [icon, "icon"],
         [ticket, "ticket"],
+        [summary, "summary"],
         [status, "status"],
+        [scenario.due, "due"],
+        [scenario.application, "application"],
+        [scenario.serial, "serial"],
+        [scenario.received_at, "time"],
+        [contactCell(scenario), "contact"],
+        [scenario.client, "client"],
       ];
       cells.forEach(([value, column]) => {
         const cell = typeof value === "string"
@@ -227,7 +299,10 @@
   }
 
   function renderTicketContext(scenario) {
-    elements.caseTitle.textContent = `${scenario.ticket_id} · ${scenario.title}`;
+    elements.caseTitle.textContent = scenario.title;
+    if (elements.ticketKeyBreadcrumb) {
+      elements.ticketKeyBreadcrumb.textContent = scenario.ticket_id;
+    }
     elements.ticketAccount.textContent = scenario.account;
     elements.ticketRequester.textContent = scenario.requester;
     elements.ticketChannel.textContent = scenario.channel;
@@ -235,6 +310,12 @@
     elements.ticketRequesterDetail.textContent = scenario.requester;
     elements.ticketAssignedTeam.textContent = scenario.assigned_team;
     elements.ticketSlaPreview.textContent = scenario.sla_preview;
+    if (elements.ticketClientDetail) elements.ticketClientDetail.textContent = scenario.client;
+    if (elements.ticketApplicationDetail) elements.ticketApplicationDetail.textContent = scenario.application;
+    if (elements.ticketChannelDetail) elements.ticketChannelDetail.textContent = scenario.channel;
+    if (elements.ticketSerialDetail) elements.ticketSerialDetail.textContent = scenario.serial;
+    if (elements.ticketContractDetail) elements.ticketContractDetail.textContent = scenario.contract;
+    if (elements.ticketContactDetail) elements.ticketContactDetail.textContent = scenario.contact;
   }
 
   function resetDecisionView() {
@@ -254,9 +335,10 @@
     elements.modeBadge.textContent = "IDLE";
     elements.modeBadge.dataset.mode = "idle";
     elements.stateBadge.textContent = "CREATED";
-    elements.decisionTitle.textContent = "Awaiting investigation";
-    elements.exceptionFlag.textContent = "No run";
-    elements.docketCount.textContent = "0 exceptions";
+    elements.decisionTitle.textContent = "Triage not started";
+    elements.exceptionFlag.textContent = "Not started";
+    elements.docketCount.textContent = "No exceptions";
+    elements.decisionCard.classList.add("is-unstarted");
     elements.correlationId.textContent = "—";
     elements.revisionLabel.textContent = "Revision · local";
     renderList(elements.missingEvidence, ["Not evaluated"], false);
@@ -267,6 +349,7 @@
     elements.correctionButton.disabled = true;
     elements.requestInfoButton.disabled = true;
     elements.reviewActions.forEach((button) => { button.disabled = true; });
+    elements.transitionCluster.hidden = true;
     elements.outreachDraft.hidden = true;
   }
 
@@ -278,7 +361,7 @@
     elements.select.value = scenarioId;
     renderTicketContext(scenario);
     elements.sourceNote.textContent = `“${scenario.summary}”`;
-    elements.packetSummary.textContent = "Ready to investigate contract, routing, access, fulfillment, and closure dependencies.";
+    elements.packetSummary.textContent = "Run triage to populate routing, SLA, and handoff details for this issue.";
     elements.outreachDraft.hidden = true;
     if (run) {
       renderRun();
@@ -287,7 +370,7 @@
       resetDecisionView();
     }
     renderScenarios();
-    setStatus(`${scenario.ticket_id} selected. Run the bounded background sweep.`, "neutral");
+    setStatus(`${scenario.ticket_id} selected.`, "neutral");
   }
 
   function filterQueue(filter) {
@@ -318,16 +401,22 @@
     elements.modeBadge.dataset.mode = run.mode.toLowerCase();
     elements.modeBadge.title = run.mode_label;
     elements.stateBadge.textContent = run.state.replaceAll("_", " ");
-    const exceptionCount = decision.missing_evidence.length + decision.review_reasons.length;
-    elements.docketCount.textContent = exceptionCount ? `${exceptionCount} exceptions` : "Routine · no exceptions";
+    const gaps = decision.missing_evidence.length;
+    const notes = decision.review_reasons.length;
+    elements.docketCount.textContent = gaps
+      ? `${gaps} evidence gap${gaps === 1 ? "" : "s"}${notes ? ` · ${notes} review note${notes === 1 ? "" : "s"}` : ""}`
+      : notes
+        ? `${notes} review note${notes === 1 ? "" : "s"}`
+        : "No exceptions";
+    elements.decisionCard.classList.remove("is-unstarted");
     const reviewable = run.state === "PREPARED" || run.state === "REVIEW_REQUIRED";
     elements.decisionTitle.textContent = reviewable
       ? "Coordinator review required"
       : run.state === "DEGRADED_REVIEW_REQUIRED"
-        ? "Manual review required · live agent unavailable"
+        ? "Manual triage · AI service unavailable"
         : "Review recorded";
-    elements.exceptionFlag.textContent = exceptionCount ? "Review required" : "Ready to route";
-    elements.deadline.textContent = decision.deadline;
+    elements.exceptionFlag.textContent = gaps || notes ? "Review required" : "Ready to route";
+    elements.deadline.textContent = formatDeadline(decision.deadline);
     elements.owner.textContent = decision.owner.replaceAll("_", " ");
     elements.routeTeam.textContent = decision.contracted_team;
     elements.internalTeam.textContent = decision.internal_team.replaceAll("_", " ");
@@ -344,6 +433,7 @@
     renderList(elements.closureProof, decision.closure_proof, false);
     renderList(elements.blockedActions, decision.blocked_actions, false);
     elements.reasonCode.disabled = !reviewable;
+    elements.transitionCluster.hidden = !reviewable;
     elements.correctionButton.disabled = !(
       reviewable && run.scenario_id === "replacement-pressure" && decision.missing_evidence.length > 0
     );
@@ -373,8 +463,8 @@
       audit.append(node("strong", event.label));
       const auditLabels = {
         review: "Human review recorded",
-        tool: "Sanitized tool event",
-        workflow: "Immutable workflow event",
+        tool: "Automation event",
+        workflow: "Workflow event",
       };
       audit.append(node("span", auditLabels[event.type] || "Bounded event"));
       elements.auditTimeline.append(audit);
@@ -383,8 +473,8 @@
       const trace = node("li");
       trace.append(node("span", undefined, "trace-dot"));
       const traceCopy = node("div");
-      traceCopy.append(node("strong", "No live tool trace"));
-      traceCopy.append(node("small", "This run used the labeled deterministic fallback."));
+      traceCopy.append(node("strong", "No tool trace"));
+      traceCopy.append(node("small", "This run used the deterministic fallback."));
       trace.append(traceCopy);
       elements.toolTimeline.append(trace);
     }
@@ -405,7 +495,7 @@
   async function runSweep() {
     elements.runButton.disabled = true;
     elements.runButton.setAttribute("aria-busy", "true");
-    setStatus("Investigating approved evidence lanes…", "working");
+    setStatus("Running triage…", "working");
     try {
       const run = await request("/api/v1/runs", {
         method: "POST",
@@ -424,8 +514,8 @@
       const liveCompleted = run.state === "PREPARED" || run.state === "REVIEW_REQUIRED";
       setStatus(
         liveCompleted
-          ? "Sweep complete. Evidence-linked draft is ready for human review."
-          : "Live agent unavailable. Deterministic findings are shown, but approval is disabled.",
+          ? "Triage complete. The recommendation is ready for your review."
+          : "AI service unavailable. Deterministic findings are shown and approval is disabled.",
         liveCompleted ? "success" : "warning",
       );
       elements.decisionTitle.focus({ preventScroll: true });

@@ -86,7 +86,7 @@ class BrowserWorkflowTests(unittest.TestCase):
         cls.server.should_exit = True
         cls.thread.join(timeout=5)
 
-    def test_reset_sweep_decision_approval_and_audit_timeline(self) -> None:
+    def test_reset_triage_decision_approval_and_audit_timeline(self) -> None:
         browser_path = os.getenv("FIELD_BRIDGE_CHROME_PATH")
         mac_chrome = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
         if browser_path is None and mac_chrome.exists():
@@ -102,7 +102,7 @@ class BrowserWorkflowTests(unittest.TestCase):
 
             page.get_by_role("button", name="Reset").click()
             page.wait_for_load_state("networkidle")
-            page.get_by_role("button", name="Run background sweep").click()
+            page.get_by_role("button", name="Run triage").click()
             page.get_by_text("Coordinator review required").wait_for()
 
             self.assertEqual(page.locator("#mode-badge").inner_text(), "LIVE")
@@ -152,7 +152,7 @@ class BrowserWorkflowTests(unittest.TestCase):
             self.assertEqual(page.locator(".scenario-card").count(), 1)
             page.get_by_role("button", name="All 2").click()
 
-            page.get_by_role("button", name="Run background sweep").click()
+            page.get_by_role("button", name="Run triage").click()
             page.get_by_text("Coordinator review required").wait_for()
             page.get_by_role("button", name="Prepare information request").click()
             page.get_by_text("Draft only · not sent").wait_for()

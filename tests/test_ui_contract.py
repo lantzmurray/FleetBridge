@@ -22,7 +22,7 @@ class FieldBridgeUiContractTests(unittest.TestCase):
         self.assertIn("reject", script)
         self.assertIn("/api/v1/runs", script)
         self.assertIn('event.type === "tool"', script)
-        self.assertIn("No live tool trace", script)
+        self.assertIn("No tool trace", script)
         self.assertIn('run.state === "PREPARED" || run.state === "REVIEW_REQUIRED"', script)
         self.assertIn("serial_and_user_confirmed", script)
         self.assertIn("Apply approved synthetic evidence", html)

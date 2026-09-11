@@ -43,13 +43,13 @@ class FieldBridgeApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("text/html", response.headers["content-type"])
-        self.assertIn("A technician can replace the device perfectly", response.text)
-        self.assertIn("Professional Agents", response.text)
-        self.assertIn("Run background sweep", response.text)
-        self.assertIn("Decision docket", response.text)
+        self.assertIn("FieldBridge Service Desk", response.text)
+        self.assertIn("prepare, never execute", response.text)
+        self.assertIn("Run triage", response.text)
+        self.assertIn("AI triage", response.text)
         self.assertIn('aria-live="polite"', response.text)
-        self.assertIn('href="static/app.css?v=0.3.0"', response.text)
-        self.assertIn('src="static/app.js?v=0.3.0"', response.text)
+        self.assertIn('href="static/app.css?v=0.6.0"', response.text)
+        self.assertIn('src="static/app.js?v=0.6.0"', response.text)
 
     def test_security_headers_are_set_on_html_and_api_responses(self) -> None:
         for response in (self.client.get("/"), self.client.get("/health")):

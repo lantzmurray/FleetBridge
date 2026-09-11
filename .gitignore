@@ -27,3 +27,7 @@ docs/JUDGE_STORY.md
 
 # Local per-project demo assets
 assets/
+
+# Session-local agent tooling caches
+.v2c/
+.video_agent/

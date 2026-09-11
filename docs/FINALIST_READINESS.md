@@ -1,6 +1,6 @@
 # FieldBridge Finalist Readiness
 
-Assessment date: 2026-09-07
+Assessment date: 2026-09-10
 
 ## Judge verdict
 
@@ -20,7 +20,7 @@ criteria.
 | Design | Queue-first service desk, selected-record workflow, HITL review, follow-up draft, audit timeline, visible boundary | 4.4/5 |
 | Potential impact | Specific coordinator audience and recurring triage/SLA problem; pilot metrics defined, but no measured production outcome | 4.1/5 |
 | Creativity and originality | Agent prepares the hidden work around field dispatch while code protects commitments and humans retain action authority | 4.4/5 |
-| Presentation | Hook-led UI, concise pitch card, repeatable Playwright story; final narrated public video not yet recorded | 4.0/5 |
+| Presentation | Hook-led UI, concise pitch card, repeatable Playwright story; narration-paced local capture recorded and verified | 4.3/5 |
 | **Estimated total** |  | **21.1/25** |
 
 The optional Builder Center bonus is separate and remains unverified.
@@ -53,7 +53,8 @@ The optional Builder Center bonus is separate and remains unverified.
 4. Confirm the public repository CI passes on Python 3.12. Local verification is
    currently Python 3.14 and does not replace the CI result.
 5. Record the final human-narrated UI demo from the deployed revision, keep it
-   under five minutes, and upload it publicly to YouTube or Vimeo.
+   under five minutes, and upload it publicly to YouTube or Vimeo. A local
+   narration-paced rehearsal is now recorded; it is not deployment evidence.
 6. Complete the Devpost fields and AWS Builder ID. Publish Builder Center posts
    only with verified claims.
 
@@ -72,3 +73,18 @@ Pilot success should measure:
 - routing corrections before field dispatch;
 - SLA-at-risk cases surfaced before the deadline;
 - repeat visits attributable to incomplete replacement/restoration handoffs.
+
+## Local setup and narration evidence
+
+Verified 2026-09-10 on Python 3.12.14 from the project `.venv`:
+
+- Installed editable project with all `.[dev]` dependencies.
+- `strands-agents` 1.55.1 is installed and importable.
+- Playwright Chromium and FFmpeg are installed for browser capture.
+- Browser rehearsal: `REHEARSAL PASSED`.
+- Full test suite: `84 passed`, `10 subtests passed`.
+- Narration-paced synthetic/local capture: [fieldbridge-judge-demo.webm](../output/playwright/fieldbridge-judge-demo.webm).
+
+The capture is explicitly labeled as a local synthetic fixture and must not be
+presented as live Bedrock or AgentCore evidence. A deployment-backed capture
+and public upload remain release gates.

@@ -78,7 +78,7 @@ The zero-build FastAPI interface includes:
 
 - a service-desk queue with working Open, Prepared, Awaiting, and Closed views;
 - requester, account, channel, assignment, current status, and SLA context;
-- a seeded synthetic inbox and background sweep;
+- a seeded synthetic inbox and triage;
 - thin-ticket versus dispatch-ready before/after view;
 - sanitized tool names, status, duration, and correlation ID—never chain-of-thought;
 - decision docket, bounded synthetic evidence correction, and draft review controls;
@@ -96,7 +96,7 @@ python3.12 -m venv .venv
 .venv/bin/uvicorn fieldbridge.api:app --port 8080
 ```
 
-Open `http://127.0.0.1:8080` and choose **Run background sweep**. Without AWS configuration, the UI intentionally displays the
+Open `http://127.0.0.1:8080` and choose **Run triage**. Without AWS configuration, the UI intentionally displays the
 labeled degraded path. To attempt a model-backed local run, configure normal AWS credentials
 and:
 

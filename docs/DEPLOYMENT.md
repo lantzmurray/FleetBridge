@@ -117,7 +117,7 @@ submission.
    digest, agent image digest, and Git revision.
 2. Confirm `/health`, `/api/v1/boundary`, and `/api/v1/scenarios` expose no
    secrets and correctly identify synthetic-only mode.
-3. Run the complete replacement workflow in a browser: reset the browser view, background sweep,
+3. Run the complete replacement workflow in a browser: reset the browser view, triage,
    decision card, correction, approval, and audit event.
 4. Run `python evals/run_evals.py --base-url "$FIELD_BRIDGE_URL" --attempts 3`.
    All 15 cases must pass in all three consecutive attempts.

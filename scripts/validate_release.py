@@ -72,7 +72,7 @@ def validate() -> None:
     readme = require_file("README.md")
     require_all(
         readme,
-        ("Professional Agents", "UNKNOWN", "synthetic", "Run background sweep"),
+        ("Professional Agents", "UNKNOWN", "synthetic", "Run triage"),
         "README.md",
     )
 
